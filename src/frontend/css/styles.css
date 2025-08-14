@@ -1,0 +1,554 @@
+/* Main Styles for Estilo Futbol */
+
+:root {
+    --primary-color: #1a73e8;
+    --secondary-color: #34a853;
+    --accent-color: #ea4335;
+    --background-color: #f8f9fa;
+    --text-color: #202124;
+    --border-color: #dadce0;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: var(--text-color);
+    background-color: var(--background-color);
+}
+
+header {
+    background-color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo-container {
+    display: flex;
+    align-items: center;
+}
+
+.logo {
+    height: 120px;
+    margin-right: 1rem;
+}
+
+nav ul {
+    display: flex;
+    list-style: none;
+}
+
+nav ul li {
+    margin-left: 1.5rem;
+}
+
+nav ul li a {
+    text-decoration: none;
+    color: var(--text-color);
+    font-weight: 500;
+    padding: 0.5rem 0;
+    border-bottom: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+nav ul li a:hover,
+nav ul li a.active {
+    color: var(--primary-color);
+    border-bottom: 2px solid var(--primary-color);
+}
+
+main {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 2rem;
+}
+
+.competition-selector {
+    background-color: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.selector-container {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+select, button {
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+select {
+    flex-grow: 1;
+}
+
+button {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #1557b0;
+}
+
+button:disabled {
+    background-color: #a8c7fa;
+    cursor: not-allowed;
+}
+
+.tab-content {
+    display: none;
+    background-color: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.filters {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.filters label {
+    margin-right: 0.5rem;
+    font-weight: 500;
+}
+
+.matches-container, .statistics-container, .overview-container {
+    min-height: 200px;
+}
+
+.match-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    margin-bottom: 1rem;
+}
+
+.match-info {
+    flex-grow: 1;
+}
+
+.match-teams {
+    font-weight: bold;
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+}
+
+.match-date, .match-round {
+    color: #5f6368;
+    font-size: 0.9rem;
+}
+
+.match-score {
+    font-size: 1.5rem;
+    font-weight: bold;
+    padding: 0 1rem;
+}
+
+.stat-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.stat-table th, .stat-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.stat-table th {
+    background-color: #f1f3f4;
+    font-weight: 500;
+}
+
+footer {
+    text-align: center;
+    padding: 2rem;
+    color: #5f6368;
+    font-size: 0.9rem;
+}
+
+/* Match List Styles */
+.match-list-section {
+    background-color: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.match-form-controls {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+    margin-bottom: 1.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+#match-list {
+    min-height: 200px;
+    position: relative;
+}
+
+.match-item {
+    display: flex;
+    flex-direction: column;
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    margin-bottom: 1rem;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    background-color: #fff;
+    position: relative;
+    overflow: hidden;
+}
+
+.match-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+}
+
+.match-item:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background-color: var(--primary-color);
+}
+
+.match-date {
+    color: #5f6368;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.match-teams {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    padding: 0.5rem 0;
+}
+
+.team {
+    font-weight: 500;
+    flex: 1;
+}
+
+.home-team {
+    text-align: right;
+    padding-right: 10px;
+}
+
+.away-team {
+    text-align: left;
+    padding-left: 10px;
+}
+
+.winner {
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.score {
+    font-weight: bold;
+    padding: 0 1rem;
+    background-color: #f1f3f4;
+    border-radius: 4px;
+    min-width: 60px;
+    text-align: center;
+}
+
+.match-round {
+    color: #5f6368;
+    font-size: 0.9rem;
+    align-self: flex-end;
+    background-color: #f1f3f4;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+}
+
+.round-header {
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--primary-color);
+    font-size: 1.2rem;
+}
+
+.loading-message, .error-message, .no-data-message {
+    padding: 1rem;
+    text-align: center;
+    font-size: 1rem;
+    color: #5f6368;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    margin: 1rem 0;
+}
+
+.loading-message {
+    border-left: 4px solid var(--primary-color);
+    background-color: #e8f0fe;
+    color: var(--primary-color);
+}
+
+.error-message {
+    border-left: 4px solid var(--accent-color);
+    color: var(--accent-color);
+    background-color: #fdeded;
+}
+
+.no-data-message {
+    border-left: 4px solid var(--secondary-color);
+    background-color: #e6f4ea;
+    position: relative;
+    padding-left: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.loading-message:before {
+    content: '';
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
+    border: 2px solid var(--primary-color);
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.error-message {
+    background-color: #fce8e6;
+    color: #d93025;
+}
+
+.no-data-message {
+    background-color: #f1f3f4;
+    color: #5f6368;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    header {
+        flex-direction: column;
+        padding: 1rem;
+    }
+    
+    .logo-container {
+        margin-bottom: 1rem;
+    }
+    
+    nav ul {
+        width: 100%;
+        justify-content: space-around;
+    }
+    
+    nav ul li {
+        margin: 0;
+    }
+    
+    .selector-container, .match-form-controls {
+        flex-direction: column;
+    }
+    
+    main {
+        padding: 0 1rem;
+    }
+}
+
+/* Match List Styles */
+.match-list-section {
+    background-color: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.match-form-controls {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+    margin-bottom: 1.5rem;
+    align-items: center;
+}
+
+#match-list {
+    min-height: 200px;
+    position: relative;
+}
+
+.match-item {
+    display: flex;
+    flex-direction: column;
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    margin-bottom: 1rem;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    background-color: #fff;
+    position: relative;
+    overflow: hidden;
+}
+
+.match-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+}
+
+.match-item:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background-color: var(--primary-color);
+}
+
+.match-date {
+    color: #5f6368;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.match-teams {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    padding: 0.5rem 0;
+}
+
+.team {
+    font-weight: 500;
+    flex: 1;
+}
+
+.home-team {
+    text-align: right;
+    padding-right: 10px;
+}
+
+.away-team {
+    text-align: left;
+    padding-left: 10px;
+}
+
+.score {
+    font-weight: bold;
+    padding: 0 1rem;
+    background-color: #f1f3f4;
+    border-radius: 4px;
+    min-width: 60px;
+    text-align: center;
+}
+
+.match-round {
+    color: #5f6368;
+    font-size: 0.9rem;
+    align-self: flex-end;
+    background-color: #f1f3f4;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+}
+
+.round-header {
+    margin: 1.5rem 0 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--primary-color);
+    font-size: 1.2rem;
+}
+
+.round-header:first-child {
+    margin-top: 0;
+}
+
+.winner {
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.loading-message, .error-message, .no-data-message {
+    padding: 1rem;
+    text-align: center;
+    border-radius: 4px;
+    margin: 1rem 0;
+}
+
+.loading-message {
+    background-color: #e8f0fe;
+    color: var(--primary-color);
+    position: relative;
+    padding-left: 2rem;
+}
+
+.loading-message:before {
+    content: '';
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--primary-color);
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: translateY(-50%) rotate(360deg); }
+}
+
+.error-message {
+    background-color: #fce8e6;
+    color: var(--accent-color);
+}
+
+.no-data-message {
+    background-color: #f1f3f4;
+    color: #5f6368;
+}
