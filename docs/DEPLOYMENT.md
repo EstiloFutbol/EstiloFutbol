@@ -1,10 +1,39 @@
 # Estilo Futbol - Deployment Guide
 
+🌐 **Live Demo**: [https://estilo-futbol.vercel.app/](https://estilo-futbol.vercel.app/)
+
 ## Deployment Options
 
-### 1. Vercel
+### 1. Vercel (Recommended)
 
-#### Setup
+The application is currently deployed on Vercel and configured for seamless deployment using the included `vercel.json` configuration.
+
+#### Web Interface Deployment (Recommended)
+
+1. **Prerequisites**:
+   - A [Vercel](https://vercel.com) account
+   - Your code pushed to a GitHub repository
+
+2. **Connect to Vercel**:
+   - Go to [vercel.com](https://vercel.com) and sign in with your GitHub account
+   - Click "New Project" and import your GitHub repository
+
+3. **Configure the Project**:
+   - **Framework Preset**: Select "Other" (the project uses a custom FastAPI backend with vanilla JavaScript frontend)
+   - **Root Directory**: Leave as default (root)
+   - **Build Command**: Leave empty (not needed for this setup)
+   - **Output Directory**: Leave empty
+   - **Install Command**: Leave as default
+
+4. **Deploy**:
+   - Click "Deploy" and Vercel will automatically build and deploy your application
+   - The deployment process typically takes 1-2 minutes
+
+5. **Access Your Application**:
+   - Once deployed, your application will be available at a URL like `https://your-project-name.vercel.app/`
+
+#### CLI Deployment (Alternative)
+
 1. Install Vercel CLI:
    ```bash
    npm i -g vercel
@@ -15,33 +44,71 @@
    vercel login
    ```
 
-3. Deploy:
+3. Deploy from project root:
    ```bash
    vercel
    ```
 
-#### Configuration
-Create `vercel.json`:
+#### Current Vercel Configuration
+
+The project includes a `vercel.json` file with the following configuration:
+
 ```json
 {
   "version": 2,
   "builds": [
     {
-      "src": "src/app.py",
+      "src": "src/frontend/**",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "src/backend/app/main.py",
       "use": "@vercel/python"
     }
   ],
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "src/app.py"
+      "dest": "src/backend/app/main.py"
+    },
+    {
+      "src": "/(.*\\.(css|js|png|jpg|jpeg|gif|svg|ico))",
+      "dest": "src/frontend/$1"
     },
     {
       "src": "/(.*)",
-      "dest": "src/frontend/templates/index.html"
+      "dest": "src/frontend/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, PUT, DELETE, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type, Authorization"
+        }
+      ]
     }
   ]
 }
+```
+
+This configuration:
+- Serves static frontend files (HTML, CSS, JS) using `@vercel/static`
+- Runs the FastAPI backend using `@vercel/python`
+- Routes API calls to `/api/*` to the backend
+- Routes static assets to the frontend directory
+- Routes all other requests to the main HTML file
+- Includes CORS headers for API endpoints
 ```
 
 ### 2. Heroku (For Full Flask App)

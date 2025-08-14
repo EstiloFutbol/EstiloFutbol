@@ -2,6 +2,8 @@
 
 A modern web application for football analytics using StatsBomb open data.
 
+🌐 **Live Demo**: [https://estilo-futbol.vercel.app/](https://estilo-futbol.vercel.app/)
+
 ![Estilo Futbol Logo](assets/Logo.png)
 
 ## Overview
@@ -166,6 +168,47 @@ python -m http.server 8080 --directory src/frontend
 ```
 
 3. Open your browser and navigate to `http://localhost:8080`
+
+## Deployment
+
+### Deploying to Vercel
+
+The application is configured for easy deployment to Vercel using the included `vercel.json` configuration file.
+
+#### Prerequisites
+- A [Vercel](https://vercel.com) account
+- Your code pushed to a GitHub repository
+
+#### Deployment Steps
+
+1. **Connect to Vercel**:
+   - Go to [vercel.com](https://vercel.com) and sign in with your GitHub account
+   - Click "New Project" and import your GitHub repository
+
+2. **Configure the Project**:
+   - **Framework Preset**: Select "Other" (the project uses a custom FastAPI backend with vanilla JavaScript frontend)
+   - **Root Directory**: Leave as default (root)
+   - **Build Command**: Leave empty (not needed for this setup)
+   - **Output Directory**: Leave empty
+   - **Install Command**: Leave as default
+
+3. **Deploy**:
+   - Click "Deploy" and Vercel will automatically build and deploy your application
+   - The `vercel.json` file handles the routing configuration for both the API and static files
+
+4. **Access Your Application**:
+   - Once deployed, your application will be available at a URL like `https://your-project-name.vercel.app/`
+   - The live demo is available at: [https://estilo-futbol.vercel.app/](https://estilo-futbol.vercel.app/)
+
+#### Vercel Configuration
+
+The project includes a `vercel.json` file that configures:
+- **Static file serving** for the frontend (HTML, CSS, JS)
+- **Python runtime** for the FastAPI backend
+- **Routing rules** to handle API endpoints and static assets
+- **CORS headers** for cross-origin requests
+
+No additional configuration is needed - Vercel will automatically detect and deploy both the frontend and backend components.
 
 ## Documentation
 

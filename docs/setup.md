@@ -2,6 +2,10 @@
 
 This guide provides detailed instructions for setting up the Estilo Futbol application for local development.
 
+🌐 **Live Demo**: [https://estilo-futbol.vercel.app/](https://estilo-futbol.vercel.app/)
+
+> **Note**: You can try the live application before setting up locally. This guide is for developers who want to contribute or run the application locally.
+
 ## Prerequisites
 
 Before you begin, ensure you have the following installed on your system:

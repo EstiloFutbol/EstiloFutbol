@@ -2,6 +2,9 @@
 
 Welcome to the Estilo Futbol documentation. This guide provides comprehensive information about the project, its architecture, setup instructions, and more.
 
+🌐 **Live Application**: [https://estilo-futbol.vercel.app/](https://estilo-futbol.vercel.app/)
+📚 **API Documentation**: [https://estilo-futbol.vercel.app/api/docs](https://estilo-futbol.vercel.app/api/docs)
+
 ## Table of Contents
 
 ### Getting Started

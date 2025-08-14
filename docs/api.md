@@ -12,11 +12,15 @@ When running locally, the API is available at:
 http://localhost:8000/api
 ```
 
-When deployed to Vercel, the API will be available at your Vercel deployment URL:
+When deployed to Vercel, the API is available at:
 
 ```
-https://your-vercel-app.vercel.app/api
+https://estilo-futbol.vercel.app/api
 ```
+
+🌐 **Live API**: [https://estilo-futbol.vercel.app/api](https://estilo-futbol.vercel.app/api)
+
+**Interactive API Documentation**: [https://estilo-futbol.vercel.app/api/docs](https://estilo-futbol.vercel.app/api/docs)
 
 ## Authentication
 
