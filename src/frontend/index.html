@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estilo Futbol - Football Analytics</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="icon" type="image/png" href="../assets/Logo horizontal.png">
+</head>
+<body>
+    <header>
+        <div class="logo-container">
+            <img src="../assets/Logo horizontal.png" alt="Estilo Futbol Logo" class="logo">
+            <h1>Estilo Futbol</h1>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="#" class="active" data-tab="overview">Overview</a></li>
+                <li><a href="#" data-tab="matches">Matches</a></li>
+                <li><a href="#" data-tab="statistics">Statistics</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="competition-selector">
+            <h2>Select Competition</h2>
+            <div class="selector-container">
+                <select id="competition-select">
+                    <option value="" disabled selected>Select a competition</option>
+                    <!-- Will be populated by JavaScript -->
+                </select>
+                <select id="season-select" disabled>
+                    <option value="" disabled selected>Select a season</option>
+                    <!-- Will be populated by JavaScript -->
+                </select>
+                <button id="load-data-btn" disabled>Load Data</button>
+            </div>
+        </section>
+        
+        <section class="match-list-section">
+            <h2>Match List</h2>
+            <div class="match-form-controls">
+                <select id="match-competition-select">
+                    <option value="43" selected>La Liga</option>
+                </select>
+                <select id="match-season-select">
+                    <option value="3" selected>2020/2021</option>
+                </select>
+                <button id="load-matches-btn">Load Matches</button>
+            </div>
+            <div id="match-list">
+                <p class="loading-message">Select competition and season, then click Load Matches</p>
+            </div>
+        </section>
+
+        <section id="overview-tab" class="tab-content active">
+            <h2>Competition Overview</h2>
+            <div class="overview-container">
+                <p>Select a competition and season to view overview data.</p>
+                <!-- Will be populated by JavaScript -->
+            </div>
+        </section>
+
+        <section id="matches-tab" class="tab-content">
+            <h2>Matches</h2>
+            <div class="filters">
+                <label for="round-filter">Round:</label>
+                <select id="round-filter">
+                    <option value="all">All Rounds</option>
+                    <!-- Will be populated by JavaScript -->
+                </select>
+            </div>
+            <div class="matches-container">
+                <p>Select a competition and season to view matches.</p>
+                <!-- Will be populated by JavaScript -->
+            </div>
+        </section>
+
+        <section id="statistics-tab" class="tab-content">
+            <h2>Team Statistics</h2>
+            <div class="filters">
+                <label for="stat-category">Category:</label>
+                <select id="stat-category">
+                    <option value="goals">Goals</option>
+                    <option value="possession">Possession</option>
+                    <option value="passes">Passes</option>
+                    <option value="shots">Shots</option>
+                </select>
+            </div>
+            <div class="statistics-container">
+                <p>Select a competition and season to view statistics.</p>
+                <!-- Will be populated by JavaScript -->
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2023 Estilo Futbol. Powered by StatsBomb Open Data.</p>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+</html>
