@@ -58,10 +58,6 @@ The project includes a `vercel.json` file with the following configuration:
   "version": 2,
   "builds": [
     {
-      "src": "src/frontend/**",
-      "use": "@vercel/static"
-    },
-    {
       "src": "src/backend/app/main.py",
       "use": "@vercel/python"
     }
@@ -72,12 +68,8 @@ The project includes a `vercel.json` file with the following configuration:
       "dest": "src/backend/app/main.py"
     },
     {
-      "src": "/(.*\\.(css|js|png|jpg|jpeg|gif|svg|ico))",
-      "dest": "src/frontend/$1"
-    },
-    {
       "src": "/(.*)",
-      "dest": "src/frontend/index.html"
+      "dest": "src/backend/app/main.py"
     }
   ],
   "headers": [
@@ -102,13 +94,56 @@ The project includes a `vercel.json` file with the following configuration:
 }
 ```
 
-This configuration:
-- Serves static frontend files (HTML, CSS, JS) using `@vercel/static`
-- Runs the FastAPI backend using `@vercel/python`
-- Routes API calls to `/api/*` to the backend
-- Routes static assets to the frontend directory
-- Routes all other requests to the main HTML file
-- Includes CORS headers for API endpoints
+**Key Changes in Current Configuration:**
+
+- **Simplified Build Process**: Only the FastAPI backend is built, as it now serves the frontend directly
+- **Unified Routing**: All requests are routed to the FastAPI application, which handles both API endpoints and static file serving
+- **Static File Integration**: The backend serves frontend files directly using FastAPI's StaticFiles middleware
+- **Enhanced Performance**: Reduced complexity and improved loading times by eliminating separate frontend/backend coordination
+  ]
+}
+```
+
+This configuration provides:
+
+- **Simplified Architecture**: Single FastAPI application handles both API and static file serving
+- **Unified Deployment**: Only one build process needed instead of separate frontend/backend builds
+- **Better Performance**: Reduced latency by eliminating cross-origin requests between frontend and backend
+- **Easier Maintenance**: Single codebase deployment with consistent routing
+- **Enhanced Security**: No CORS issues since everything is served from the same origin
+
+#### Dependencies and Requirements
+
+The deployment now requires the following additional dependencies:
+
+```txt
+# Core FastAPI dependencies
+fastapi>=0.68.0,<0.69.0
+uvicorn>=0.15.0,<0.16.0
+pydantic>=1.8.0,<2.0.0
+
+# StatsBomb data integration
+statsbombpy>=1.10.0
+
+# Environment and configuration
+python-dotenv>=0.19.0
+requests>=2.26.0
+python-multipart>=0.0.5
+
+# Static file serving (NEW)
+aiofiles
+
+# Authentication dependencies
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+bcrypt>=3.2.0
+
+# Testing
+pytest>=7.0.0
+pytest-cov>=4.0.0
+```
+
+**Note**: The `aiofiles` dependency is crucial for proper static file serving in the FastAPI application.
 ```
 
 ### 2. Heroku (For Full Flask App)
@@ -167,9 +202,55 @@ jobs:
 
 ## Environment Variables
 
-### Required Variables
+### Required Variables for Production
+
+For security, you **must** configure the following environment variables in your deployment platform:
+
+#### Vercel Environment Variables
+
+1. Go to your Vercel project dashboard
+2. Navigate to "Settings" → "Environment Variables"
+3. Add the following variables:
+
+```
+SECRET_KEY=your-production-secret-key-here
+API_KEY=your-production-api-key-here
+ADMIN_USERNAME=your-admin-username
+ADMIN_PASSWORD=your-secure-admin-password
+BACKEND_CORS_ORIGINS=["https://your-domain.vercel.app"]
+```
+
+#### Generating Secure Production Keys
+
+Use these commands to generate secure keys for production:
+
+```bash
+# Generate a 32-character secret key for JWT signing
+python -c "import secrets; print(secrets.token_urlsafe(32))"
+
+# Generate a 24-character API key
+python -c "import secrets; print(secrets.token_urlsafe(24))"
+```
+
+#### Security Best Practices
+
+- **Never use default credentials in production**
+- **Use strong, unique passwords with mixed case, numbers, and symbols**
+- **Generate long, random secret keys (minimum 32 characters)**
+- **Store sensitive data only in environment variables, never in code**
+- **Regularly rotate API keys and passwords**
 
 ### Optional Variables
+
+These variables can be configured for additional functionality:
+
+```
+API_V1_STR=/api
+PROJECT_NAME=Estilo Futbol
+STATSBOMB_USE_PRIVATE_API=false
+STATSBOMB_API_KEY=your-statsbomb-private-key
+STATSBOMB_API_URL=https://api.statsbomb.com
+```
 
 ## Performance Optimization
 

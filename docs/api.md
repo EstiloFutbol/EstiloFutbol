@@ -24,7 +24,77 @@ https://estilo-futbol.vercel.app/api
 
 ## Authentication
 
-Currently, the API uses StatsBomb's open data and does not require authentication. Future versions may support StatsBomb's private API, which will require API keys.
+The API now supports two authentication methods to secure access to football data:
+
+### 1. API Key Authentication
+
+For programmatic access, use an API key in the request header:
+
+```bash
+curl -H "X-API-Key: your-api-key-here" http://localhost:8000/api/competitions/
+```
+
+**PowerShell Example:**
+```powershell
+Invoke-WebRequest -Uri "http://localhost:8000/api/competitions/" -Headers @{"X-API-Key"="your-api-key-here"}
+```
+
+### 2. JWT Token Authentication
+
+For user-based authentication, obtain a JWT token by logging in:
+
+#### Login
+
+```
+POST /auth/login
+```
+
+**Request Body:**
+```json
+{
+  "username": "admin",
+  "password": "your-password"
+}
+```
+
+**Response:**
+```json
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "token_type": "bearer"
+}
+```
+
+#### Using JWT Token
+
+Include the token in the Authorization header:
+
+```bash
+curl -H "Authorization: Bearer your-jwt-token-here" http://localhost:8000/api/competitions/
+```
+
+**PowerShell Example:**
+```powershell
+Invoke-WebRequest -Uri "http://localhost:8000/api/competitions/" -Headers @{"Authorization"="Bearer your-jwt-token-here"}
+```
+
+### Configuration
+
+Authentication is configured via environment variables:
+
+- `API_KEY`: The API key for programmatic access
+- `SECRET_KEY`: JWT signing secret
+- `ADMIN_USERNAME`: Admin username for login
+- `ADMIN_PASSWORD`: Admin password for login
+
+### Security Features
+
+- JWT tokens expire after 30 minutes
+- CORS is configured to allow specific origins
+- All protected endpoints require either valid API key or JWT token
+- Passwords are hashed using bcrypt
+
+**Note:** The API is prepared for future integration with StatsBomb's private API, which will require additional authentication configuration.
 
 ## Endpoints
 
@@ -315,6 +385,111 @@ Returns detailed information for a specific match.
   "events_count": 1394
 }
 ```
+
+## Players
+
+The players endpoints provide access to player information and statistics, including heat map data for player positioning analysis.
+
+### Get Players
+
+```
+GET /players
+```
+
+Returns a list of all players available in the StatsBomb dataset.
+
+**Query Parameters:**
+
+- `competition_id` (integer, optional): Filter players by competition
+- `season_id` (integer, optional): Filter players by season
+
+**Example Request:**
+
+```
+GET /players?competition_id=11&season_id=90
+```
+
+**Response Example:**
+
+```json
+[
+  {
+    "player_id": 5503,
+    "player_name": "Lionel Andrés Messi Cuccittini",
+    "player_nickname": "Lionel Messi",
+    "jersey_number": 10,
+    "country": "Argentina",
+    "position": "Right Wing"
+  },
+  {
+    "player_id": 5597,
+    "player_name": "Luis Alberto Suárez Díaz",
+    "player_nickname": "Luis Suárez",
+    "jersey_number": 9,
+    "country": "Uruguay",
+    "position": "Centre Forward"
+  }
+]
+```
+
+### Get Player Heat Map
+
+```
+GET /players/{player_id}/heatmap
+```
+
+Returns heat map data for a specific player, showing their positioning throughout matches.
+
+**Parameters:**
+
+- `player_id` (path parameter): The ID of the player
+
+**Query Parameters:**
+
+- `competition_id` (integer, optional): Filter by competition
+- `season_id` (integer, optional): Filter by season
+- `match_id` (integer, optional): Filter by specific match
+
+**Example Request:**
+
+```
+GET /players/5503/heatmap?competition_id=11&season_id=90
+```
+
+**Response Example:**
+
+```json
+{
+  "player_id": 5503,
+  "player_name": "Lionel Andrés Messi Cuccittini",
+  "heat_map_data": [
+    {
+      "x": 85.2,
+      "y": 45.6,
+      "intensity": 0.8,
+      "match_id": 2275093,
+      "minute": 23
+    },
+    {
+      "x": 78.4,
+      "y": 52.1,
+      "intensity": 0.6,
+      "match_id": 2275093,
+      "minute": 45
+    }
+  ],
+  "total_positions": 1247,
+  "matches_included": 5
+}
+```
+
+**Heat Map Data Fields:**
+
+- `x`: X coordinate on the pitch (0-100, where 0 is left touchline, 100 is right touchline)
+- `y`: Y coordinate on the pitch (0-100, where 0 is bottom goal line, 100 is top goal line)
+- `intensity`: Relative intensity of player presence at this position (0.0-1.0)
+- `match_id`: The match where this position was recorded
+- `minute`: The minute of the match when this position was recorded
 
 ## Error Handling
 
