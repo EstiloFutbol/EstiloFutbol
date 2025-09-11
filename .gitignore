@@ -51,6 +51,9 @@ logs/
 
 # Large asset files
 src/frontend/assets/Logos TCM24/
+# Allow logo file
+!src/frontend/assets/Logo horizontal.png
+# Ignore other image files
 *.png
 *.jpg
 *.jpeg

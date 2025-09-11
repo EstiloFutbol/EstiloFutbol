@@ -34,7 +34,13 @@ Estilo Futbol is a football analytics platform that provides insights into compe
 
 - **Competition Selection**: Choose from available competitions and seasons
 - **Match Results**: Browse matches by round with detailed information
+- **Player Heat Maps**: Interactive visualization of player positioning data on the football pitch
+- **Enhanced Statistics**: Comprehensive analytics with player-specific insights
 - **Team Statistics**: View and compare team performance metrics
+- **Secure API Access**: JWT token and API key authentication
+- **User Authentication**: Login system with secure password hashing
+- **Static File Serving**: Frontend served directly by FastAPI backend
+- **CORS Protection**: Configured for secure cross-origin requests
 - **Responsive Design**: Works on desktop and mobile devices
 - **API Documentation**: Comprehensive documentation of all endpoints
 - **Future-proof Architecture**: Prepared for switching to StatsBomb private API
@@ -51,13 +57,18 @@ EstiloFutbol/
 │   │   │   ├── main.py              # Entry point (FastAPI app)
 │   │   │   ├── api/                 # API route definitions
 │   │   │   │   ├── __init__.py
-│   │   │   │   └── matches.py       # Match endpoints
+│   │   │   │   ├── competitions.py  # Competition endpoints
+│   │   │   │   ├── matches.py       # Match endpoints
+│   │   │   │   └── players.py       # Player endpoints (NEW)
 │   │   │   ├── services/            # Logic layer (data fetching)
 │   │   │   │   ├── __init__.py
 │   │   │   │   └── statsbomb.py     # StatsBomb service
 │   │   │   ├── models/              # Pydantic models
 │   │   │   │   ├── __init__.py
-│   │   │   │   └── match.py         # Match models
+│   │   │   │   ├── competition.py   # Competition models
+│   │   │   │   ├── match.py         # Match models
+│   │   │   │   └── player.py        # Player models (NEW)
+│   │   │   ├── auth.py              # Authentication logic
 │   │   │   └── config.py            # Environment and API config
 │   │   ├── tests/                   # Unit and integration tests
 │   │   │   ├── __init__.py
@@ -124,7 +135,38 @@ source venv/bin/activate
 pip install -r src/backend/requirements.txt
 ```
 
-3. Run the backend server:
+3. Configure environment variables (Required for Security):
+
+Create a `.env` file in the project root directory:
+
+```bash
+# Security Configuration (REQUIRED)
+SECRET_KEY=your-very-long-random-secret-key-here
+API_KEY=your-secure-api-key-here
+
+# Admin Credentials (REQUIRED)
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=your-secure-password-here
+
+# API configuration
+API_V1_STR=/api
+PROJECT_NAME=Estilo Futbol
+
+# CORS settings
+BACKEND_CORS_ORIGINS=["http://localhost:3000", "http://localhost:8080", "https://estilo-futbol.vercel.app"]
+```
+
+Generate secure keys using Python:
+
+```bash
+# Generate Secret Key
+python -c "import secrets; print(secrets.token_urlsafe(32))"
+
+# Generate API Key
+python -c "import secrets; print(secrets.token_urlsafe(24))"
+```
+
+4. Run the backend server:
 
 ```bash
 # From the project root directory
@@ -240,7 +282,21 @@ Contributions are welcome! Here's how you can contribute to the Estilo Futbol pr
 
 5. **Run Tests**: Ensure your changes don't break existing functionality
    ```bash
+   # Activate virtual environment first
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   
+   # Install dependencies
+   pip install -r src/backend/requirements.txt
+   
+   # Run tests
    python -m pytest src/backend/tests/
+   ```
+
+6. **Test the Application**: Start the server and verify everything works
+   ```bash
+   python -m src.backend.app.main
+   # Open http://localhost:8000 in your browser
    ```
 
 6. **Commit Your Changes**:
