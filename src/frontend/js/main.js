@@ -1,7 +1,16 @@
 // Main JavaScript for Estilo Futbol
 
-// API base URL - change this when deploying
-const API_BASE_URL = 'http://localhost:8000/api';
+// API base URL - dynamically set based on environment
+const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:8000/api' : '/api';
+const API_KEY = 'hpTMmnwLi8Wo2oJh3pOl7Md2FYt5FbI9'; // API key for authentication
+
+// Helper function to create headers with API key
+function getApiHeaders() {
+    return {
+        'Content-Type': 'application/json',
+        'X-API-Key': API_KEY
+    };
+}
 
 // DOM Elements
 const competitionSelect = document.getElementById('competition-select');
@@ -9,147 +18,32 @@ const seasonSelect = document.getElementById('season-select');
 const loadDataBtn = document.getElementById('load-data-btn');
 const roundFilter = document.getElementById('round-filter');
 const statCategory = document.getElementById('stat-category');
+const playerSelection = document.getElementById('player-selection');
+const playerSelect = document.getElementById('player-select');
+const heatmapContainer = document.getElementById('heatmap-container');
 const tabLinks = document.querySelectorAll('nav a');
 const tabContents = document.querySelectorAll('.tab-content');
 
-// Match List Elements
-const matchCompetitionSelect = document.getElementById('match-competition-select');
-const matchSeasonSelect = document.getElementById('match-season-select');
-const loadMatchesBtn = document.getElementById('load-matches-btn');
-const matchListContainer = document.getElementById('match-list');
+// Match List Elements - Removed (no longer needed)
 
 // State
 let currentCompetition = null;
 let currentSeason = null;
 let matches = [];
 let rounds = [];
+let players = [];
+let currentPlayer = null;
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', () => {
-    // Load competitions for both selectors
+    // Load competitions
     loadCompetitions();
-    loadMatchCompetitions();
     
     // Set up event listeners
     setupEventListeners();
 });
 
-// Fetch and display matches from the /matches endpoint
-async function fetchAndDisplayMatches(competitionId, seasonId) {
-    try {
-        // Show loading state
-        matchListContainer.innerHTML = '<p class="loading-message">Loading matches...</p>';
-        
-        // Fetch matches from API
-        const response = await fetch(`${API_BASE_URL}/matches?competition_id=${competitionId}&season_id=${seasonId}`);
-        
-        if (!response.ok) {
-            throw new Error(`Failed to load matches: ${response.status}`);
-        }
-        
-        const matches = await response.json();
-        
-        // Display matches
-        if (matches.length === 0) {
-            matchListContainer.innerHTML = '<p class="no-data-message">No matches found for the selected competition and season.</p>';
-            return;
-        }
-        
-        // Clear container and create match items
-        matchListContainer.innerHTML = '';
-        
-        // Sort matches by date (newest first)
-        matches.sort((a, b) => new Date(b.match_date) - new Date(a.match_date));
-        
-        // Group matches by round if available
-        const matchesByRound = {};
-        let hasRounds = false;
-        
-        matches.forEach(match => {
-            const round = match.match_round || 'Other Matches';
-            if (round !== 'Other Matches') hasRounds = true;
-            
-            if (!matchesByRound[round]) {
-                matchesByRound[round] = [];
-            }
-            matchesByRound[round].push(match);
-        });
-        
-        // If we have rounds, display matches grouped by round
-        if (hasRounds) {
-            // Sort rounds in a sensible order
-            const sortedRounds = Object.keys(matchesByRound).sort((a, b) => {
-                if (a === 'Other Matches') return 1;
-                if (b === 'Other Matches') return -1;
-                return a.localeCompare(b);
-            });
-            
-            sortedRounds.forEach(round => {
-                if (matchesByRound[round].length > 0) {
-                    // Add round header
-                    const roundHeader = document.createElement('h3');
-                    roundHeader.className = 'round-header';
-                    roundHeader.textContent = round;
-                    matchListContainer.appendChild(roundHeader);
-                    
-                    // Add matches for this round
-                    matchesByRound[round].forEach(match => {
-                        createMatchItem(match, matchListContainer);
-                    });
-                }
-            });
-        } else {
-            // Just display all matches chronologically
-            matches.forEach(match => {
-                createMatchItem(match, matchListContainer);
-            });
-        }
-        
-    } catch (error) {
-        console.error('Error fetching matches:', error);
-        matchListContainer.innerHTML = `<p class="error-message">Error loading matches: ${error.message}</p>`;
-    }
-}
-
-// Helper function to create a match item
-function createMatchItem(match, container) {
-    const matchItem = document.createElement('div');
-    matchItem.className = 'match-item';
-    
-    // Format date
-    const matchDate = new Date(match.match_date).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-    });
-    
-    // Determine if there's a winner
-    let homeTeamClass = 'team home-team';
-    let awayTeamClass = 'team away-team';
-    
-    if (match.home_score > match.away_score) {
-        homeTeamClass += ' winner';
-    } else if (match.away_score > match.home_score) {
-        awayTeamClass += ' winner';
-    }
-    
-    matchItem.innerHTML = `
-        <div class="match-date">${matchDate}</div>
-        <div class="match-teams">
-            <span class="${homeTeamClass}">${match.home_team}</span>
-            <span class="score">${match.home_score} - ${match.away_score}</span>
-            <span class="${awayTeamClass}">${match.away_team}</span>
-        </div>
-        <div class="match-round">${match.match_round || 'N/A'}</div>
-    `;
-    
-    // Add click event to show match details in the future
-    matchItem.addEventListener('click', () => {
-        alert(`Match details for ${match.home_team} vs ${match.away_team} will be available in a future update.`);
-    });
-    
-    container.appendChild(matchItem);
-}
+// Match list functions removed - no longer needed
 
 // Load competitions from API
 async function loadCompetitions() {
@@ -158,7 +52,9 @@ async function loadCompetitions() {
         competitionSelect.innerHTML = '<option value="" disabled selected>Loading competitions...</option>';
         competitionSelect.disabled = true;
         
-        const response = await fetch(`${API_BASE_URL}/competitions?grouped=true`);
+        const response = await fetch(`${API_BASE_URL}/competitions?grouped=true`, {
+            headers: getApiHeaders()
+        });
         if (!response.ok) throw new Error('Failed to load competitions');
         
         const competitions = await response.json();
@@ -210,53 +106,7 @@ function addSampleCompetitions() {
     });
 }
 
-// Load competitions for match list section
-async function loadMatchCompetitions() {
-    try {
-        // Show loading state
-        matchCompetitionSelect.innerHTML = '<option value="" disabled selected>Loading competitions...</option>';
-        matchCompetitionSelect.disabled = true;
-        
-        const response = await fetch(`${API_BASE_URL}/competitions?grouped=true`);
-        if (!response.ok) throw new Error('Failed to load competitions');
-        
-        const competitions = await response.json();
-        
-        // Clear and populate match competition select
-        matchCompetitionSelect.innerHTML = '<option value="" disabled selected>Select a competition</option>';
-        matchCompetitionSelect.disabled = false;
-        
-        if (competitions.length === 0) {
-            matchCompetitionSelect.innerHTML = '<option value="" disabled selected>No competitions available</option>';
-            return;
-        }
-        
-        competitions.forEach(comp => {
-            const option = document.createElement('option');
-            option.value = comp.competition_id;
-            option.textContent = `${comp.competition_name} (${comp.country_name})`;
-            
-            // Store seasons data as a data attribute
-            option.dataset.seasons = JSON.stringify(comp.seasons || []);
-            
-            matchCompetitionSelect.appendChild(option);
-        });
-
-        // Set default selection if available
-        if (competitions.length > 0) {
-            matchCompetitionSelect.value = competitions[0].competition_id;
-            // Load seasons for the selected competition
-            loadMatchSeasons(matchCompetitionSelect.value);
-        }
-    } catch (error) {
-        console.error('Error loading match competitions:', error);
-        matchCompetitionSelect.innerHTML = '<option value="" disabled selected>Error loading competitions</option>';
-        matchCompetitionSelect.disabled = false;
-        
-        // For demo purposes, add some sample competitions
-        addSampleMatchCompetitions();
-    }
-}
+// Match competition loading functions removed - no longer needed
 
 // Load seasons for selected competition
 async function loadSeasons(competitionId) {
@@ -354,7 +204,9 @@ function addSampleSeasons() {
 // Load matches for selected competition and season
 async function loadMatches(competitionId, seasonId) {
     try {
-        const response = await fetch(`${API_BASE_URL}/matches/?competition_id=${competitionId}&season_id=${seasonId}`);
+        const response = await fetch(`${API_BASE_URL}/matches/?competition_id=${competitionId}&season_id=${seasonId}`, {
+            headers: getApiHeaders()
+        });
         if (!response.ok) throw new Error('Failed to load matches');
         
         matches = await response.json();
@@ -365,14 +217,14 @@ async function loadMatches(competitionId, seasonId) {
         // Populate round filter
         populateRoundFilter();
         
-        // Display matches
-        displayMatches();
-        
         // Display overview
         displayOverview();
         
         // Display statistics
         displayStatistics();
+        
+        // Load players for heat maps
+        await loadPlayers(competitionId, seasonId);
         
     } catch (error) {
         console.error('Error loading matches:', error);
@@ -384,31 +236,141 @@ async function loadMatches(competitionId, seasonId) {
 // Add sample matches for demo
 function addSampleMatches() {
     matches = [
+        // Group Stage Matches
         {
             match_id: 1,
-            match_date: '2021-08-14',
-            match_round: 'Matchday 1',
-            home_team: 'FC Barcelona',
-            away_team: 'Real Madrid',
-            home_score: 3,
+            match_date: '2024-06-15',
+            match_round: 'Group Stage',
+            match_day: 'Matchday 1',
+            group: 'Group A',
+            phase_order: 1,
+            home_team: 'Germany',
+            away_team: 'Scotland',
+            home_score: 5,
             away_score: 1
         },
         {
             match_id: 2,
-            match_date: '2021-08-15',
-            match_round: 'Matchday 1',
-            home_team: 'Atletico Madrid',
-            away_team: 'Valencia',
-            home_score: 2,
-            away_score: 2
+            match_date: '2024-06-15',
+            match_round: 'Group Stage',
+            match_day: 'Matchday 1',
+            group: 'Group A',
+            phase_order: 1,
+            home_team: 'Hungary',
+            away_team: 'Switzerland',
+            home_score: 1,
+            away_score: 3
         },
         {
             match_id: 3,
-            match_date: '2021-08-21',
-            match_round: 'Matchday 2',
-            home_team: 'Real Madrid',
-            away_team: 'Atletico Madrid',
-            home_score: 0,
+            match_date: '2024-06-19',
+            match_round: 'Group Stage',
+            match_day: 'Matchday 2',
+            group: 'Group A',
+            phase_order: 1,
+            home_team: 'Germany',
+            away_team: 'Hungary',
+            home_score: 2,
+            away_score: 0
+        },
+        {
+            match_id: 4,
+            match_date: '2024-06-19',
+            match_round: 'Group Stage',
+            match_day: 'Matchday 2',
+            group: 'Group A',
+            phase_order: 1,
+            home_team: 'Scotland',
+            away_team: 'Switzerland',
+            home_score: 1,
+            away_score: 1
+        },
+        // Round of 16
+        {
+            match_id: 5,
+            match_date: '2024-06-29',
+            match_round: 'Round of 16',
+            match_day: 'Round of 16',
+            group: null,
+            phase_order: 2,
+            home_team: 'Germany',
+            away_team: 'Denmark',
+            home_score: 2,
+            away_score: 0
+        },
+        {
+            match_id: 6,
+            match_date: '2024-06-30',
+            match_round: 'Round of 16',
+            match_day: 'Round of 16',
+            group: null,
+            phase_order: 2,
+            home_team: 'England',
+            away_team: 'Slovakia',
+            home_score: 2,
+            away_score: 1
+        },
+        // Quarter Finals
+        {
+            match_id: 7,
+            match_date: '2024-07-05',
+            match_round: 'Quarter Final',
+            match_day: 'Quarter Final',
+            group: null,
+            phase_order: 3,
+            home_team: 'Germany',
+            away_team: 'Spain',
+            home_score: 1,
+            away_score: 2
+        },
+        {
+            match_id: 8,
+            match_date: '2024-07-06',
+            match_round: 'Quarter Final',
+            match_day: 'Quarter Final',
+            group: null,
+            phase_order: 3,
+            home_team: 'England',
+            away_team: 'Switzerland',
+            home_score: 1,
+            away_score: 1
+        },
+        // Semi Final
+        {
+            match_id: 9,
+            match_date: '2024-07-09',
+            match_round: 'Semi Final',
+            match_day: 'Semi Final',
+            group: null,
+            phase_order: 4,
+            home_team: 'Spain',
+            away_team: 'France',
+            home_score: 2,
+            away_score: 1
+        },
+        {
+            match_id: 10,
+            match_date: '2024-07-10',
+            match_round: 'Semi Final',
+            match_day: 'Semi Final',
+            group: null,
+            phase_order: 4,
+            home_team: 'England',
+            away_team: 'Netherlands',
+            home_score: 2,
+            away_score: 1
+        },
+        // Final
+        {
+            match_id: 11,
+            match_date: '2024-07-14',
+            match_round: 'Final',
+            match_day: 'Final',
+            group: null,
+            phase_order: 5,
+            home_team: 'Spain',
+            away_team: 'England',
+            home_score: 2,
             away_score: 1
         }
     ];
@@ -418,9 +380,6 @@ function addSampleMatches() {
     
     // Populate round filter
     populateRoundFilter();
-    
-    // Display matches
-    displayMatches();
     
     // Display overview
     displayOverview();
@@ -448,55 +407,51 @@ function populateRoundFilter() {
 
 // Display matches function
 
-function displayMatches(matches, rounds) {
-    const matchListContainer = document.getElementById('match-list');
-    matchListContainer.innerHTML = '';
+function displayMatches(roundValue = 'all') {
+    const matchesContainer = document.querySelector('#matches-tab .matches-container');
+    if (!matchesContainer) {
+        console.warn('Matches container not found');
+        return;
+    }
+    
+    matchesContainer.innerHTML = '';
     
     if (!matches || matches.length === 0) {
-        matchListContainer.innerHTML = '<div class="no-data-message">No matches found for the selected criteria.</div>';
+        matchesContainer.innerHTML = '<div class="no-data-message">No matches found for the selected criteria.</div>';
         return;
+    }
+    
+    // Filter matches by round if specified
+    let filteredMatches = matches;
+    if (roundValue && roundValue !== 'all') {
+        filteredMatches = matches.filter(match => match.match_round === roundValue);
     }
     
     // Group matches by round
     const matchesByRound = {};
-    
-    // If we have rounds from the filter, use those as keys first
-    if (rounds && rounds.length > 0) {
-        rounds.forEach(round => {
-            matchesByRound[round] = [];
-        });
-    }
-    
-    // Add matches to their respective rounds
-    matches.forEach(match => {
-        const round = match.round || 'Unknown';
+    filteredMatches.forEach(match => {
+        const round = match.match_round || 'Unknown';
         if (!matchesByRound[round]) {
             matchesByRound[round] = [];
         }
         matchesByRound[round].push(match);
     });
     
-    // Get the selected round from the filter
-    const roundFilter = document.getElementById('round-filter');
-    const selectedRound = roundFilter.value;
-    
-    // Display matches for all rounds or just the selected one
+    // Display matches grouped by round
     Object.keys(matchesByRound).forEach(round => {
-        if (selectedRound === 'all' || selectedRound === round) {
-            const roundMatches = matchesByRound[round];
-            if (roundMatches.length > 0) {
-                // Add round header
-                const roundHeader = document.createElement('h3');
-                roundHeader.className = 'round-header';
-                roundHeader.textContent = `Round: ${round}`;
-                matchListContainer.appendChild(roundHeader);
-                
-                // Add matches for this round
-                roundMatches.forEach(match => {
-                    const matchItem = createMatchElement(match);
-                    matchListContainer.appendChild(matchItem);
-                });
-            }
+        const roundMatches = matchesByRound[round];
+        if (roundMatches.length > 0) {
+            // Add round header
+            const roundHeader = document.createElement('h3');
+            roundHeader.className = 'round-header';
+            roundHeader.textContent = `Round: ${round}`;
+            matchesContainer.appendChild(roundHeader);
+            
+            // Add matches for this round
+            roundMatches.forEach(match => {
+                const matchItem = createMatchElement(match);
+                matchesContainer.appendChild(matchItem);
+            });
         }
     });
 }
@@ -541,17 +496,7 @@ function createMatchElement(match) {
 
 // Function implemented elsewhere
 
-function populateRoundFilter(rounds) {
-    const roundFilter = document.getElementById('round-filter');
-    roundFilter.innerHTML = '<option value="all">All Rounds</option>';
-    
-    rounds.forEach(round => {
-        const option = document.createElement('option');
-        option.value = round;
-        option.textContent = `Round ${round}`;
-        roundFilter.appendChild(option);
-    });
-}
+// Duplicate populateRoundFilter function removed - using the one at line 280
 
 // Display matches
 // This function has been implemented earlier in the file
@@ -571,50 +516,7 @@ function populateRoundFilter(rounds) {
 
 // This function has been implemented earlier in the file
 
-// Add sample match competitions for demo
-function addSampleMatchCompetitions() {
-    const sampleCompetitions = [
-        { id: 11, name: 'La Liga' },
-        { id: 2, name: 'Premier League' },
-        { id: 37, name: 'Womens World Cup' }
-    ];
-    
-    matchCompetitionSelect.innerHTML = '<option value="" disabled>Select a competition</option>';
-    
-    sampleCompetitions.forEach(comp => {
-        const option = document.createElement('option');
-        option.value = comp.id;
-        option.textContent = comp.name;
-        
-        // Add sample seasons data
-        if (comp.id === 11) { // La Liga
-            option.dataset.seasons = JSON.stringify([
-                { season_id: 4, season_name: '2020/2021' },
-                { season_id: 5, season_name: '2019/2020' }
-            ]);
-        } else if (comp.id === 2) { // Premier League
-            option.dataset.seasons = JSON.stringify([
-                { season_id: 6, season_name: '2020/2021' },
-                { season_id: 7, season_name: '2019/2020' }
-            ]);
-        } else { // Default seasons
-            option.dataset.seasons = JSON.stringify([
-                { season_id: 3, season_name: '2018' },
-                { season_id: 2, season_name: '2014' },
-                { season_id: 1, season_name: '2010' }
-            ]);
-        }
-        
-        matchCompetitionSelect.appendChild(option);
-    });
-    
-    // Set default selection
-    if (sampleCompetitions.length > 0) {
-        matchCompetitionSelect.value = sampleCompetitions[0].id;
-        // Load seasons for the selected competition
-        loadMatchSeasons(matchCompetitionSelect.value);
-    }
-}
+// Sample match competition functions removed - no longer needed
 
 // Helper function to update load data button state
 function updateLoadDataButton() {
@@ -633,6 +535,10 @@ function setupEventListeners() {
         if (competitionId) {
             currentCompetition = competitionId;
             loadSeasons(competitionId);
+            // Automatically load data when both competition and season are selected
+            if (currentCompetition && currentSeason) {
+                loadMatches(currentCompetition, currentSeason);
+            }
         } else {
             // Reset season dropdown when no competition is selected
             seasonSelect.innerHTML = '<option value="" disabled selected>Select a competition first</option>';
@@ -646,6 +552,10 @@ function setupEventListeners() {
         const seasonId = e.target.value;
         if (seasonId) {
             currentSeason = seasonId;
+            // Automatically load data when both competition and season are selected
+            if (currentCompetition && currentSeason) {
+                loadMatches(currentCompetition, currentSeason);
+            }
         }
         updateLoadDataButton();
     });
@@ -666,7 +576,22 @@ function setupEventListeners() {
     // Stat category change
     statCategory.addEventListener('change', (e) => {
         const category = e.target.value;
-        displayStatistics(category);
+        if (category === 'players') {
+            showPlayerSelection();
+        } else {
+            hidePlayerSelection();
+            displayStatistics(category);
+        }
+    });
+    
+    // Player selection event listener
+    playerSelect.addEventListener('change', async () => {
+        const playerId = playerSelect.value;
+        if (playerId && currentCompetition && currentSeason) {
+            await displayPlayerHeatMap(currentCompetition, currentSeason, parseInt(playerId));
+        } else {
+            hideHeatMap();
+        }
     });
     
     // Tab navigation
@@ -687,103 +612,10 @@ function setupEventListeners() {
         });
     });
     
-    // Match competition select change
-    matchCompetitionSelect.addEventListener('change', (e) => {
-        const competitionId = e.target.value;
-        if (competitionId) {
-            loadMatchSeasons(competitionId);
-        }
-    });
-    
-    // Load matches button click
-    loadMatchesBtn.addEventListener('click', () => {
-        const competitionId = matchCompetitionSelect.value;
-        const seasonId = matchSeasonSelect.value;
-        if (competitionId && seasonId) {
-            fetchAndDisplayMatches(competitionId, seasonId);
-        } else {
-            matchListContainer.innerHTML = '<p class="error-message">Please select both competition and season</p>';
-        }
-    });
+    // Match list functionality removed - no longer needed
 }
 
-// Load seasons for match list section based on selected competition
-async function loadMatchSeasons(competitionId) {
-    try {
-        // Get the selected option
-        const selectedOption = Array.from(matchCompetitionSelect.options)
-            .find(option => option.value === competitionId);
-        
-        if (!selectedOption) throw new Error('Selected competition not found');
-        
-        // Get seasons from the data attribute
-        let seasons = [];
-        if (selectedOption.dataset.seasons) {
-            try {
-                seasons = JSON.parse(selectedOption.dataset.seasons);
-            } catch (e) {
-                console.error('Error parsing seasons data:', e);
-            }
-        }
-        
-        // If no seasons in data attribute, try to fetch from API
-        if (seasons.length === 0) {
-            const response = await fetch(`${API_BASE_URL}/competitions/seasons?competition_id=${competitionId}`);
-            if (!response.ok) throw new Error('Failed to load seasons');
-            seasons = await response.json();
-        }
-        
-        // Clear and populate match season select
-        matchSeasonSelect.innerHTML = '<option value="" disabled selected>Select a season</option>';
-        
-        seasons.forEach(season => {
-            const option = document.createElement('option');
-            option.value = season.season_id;
-            option.textContent = season.season_name;
-            matchSeasonSelect.appendChild(option);
-        });
-        
-        // Set default selection if available
-        if (seasons.length > 0) {
-            matchSeasonSelect.value = seasons[0].season_id;
-            matchSeasonSelect.disabled = false;
-        } else {
-            matchSeasonSelect.disabled = true;
-        }
-    } catch (error) {
-        console.error('Error loading match seasons:', error);
-        // For demo purposes, add some sample seasons
-        addSampleMatchSeasons(competitionId);
-    }
-}
-
-// Add sample match seasons for demo purposes
-function addSampleMatchSeasons(competitionId) {
-    // Clear and populate match season select
-    matchSeasonSelect.innerHTML = '<option value="" disabled selected>Select a season</option>';
-    
-    // Sample seasons data
-    const sampleSeasons = [
-        { season_id: 's1', season_name: '2022/2023' },
-        { season_id: 's2', season_name: '2021/2022' },
-        { season_id: 's3', season_name: '2020/2021' }
-    ];
-    
-    sampleSeasons.forEach(season => {
-        const option = document.createElement('option');
-        option.value = season.season_id;
-        option.textContent = season.season_name;
-        matchSeasonSelect.appendChild(option);
-    });
-    
-    // Set default selection
-    if (sampleSeasons.length > 0) {
-        matchSeasonSelect.value = sampleSeasons[0].season_id;
-        matchSeasonSelect.disabled = false;
-    } else {
-        matchSeasonSelect.disabled = true;
-    }
-}
+// Match season loading functions removed - no longer needed
 
 // Orphaned display overview function removed
 
@@ -887,6 +719,478 @@ function displayStatistics(category = 'goals') {
     `;
     
     statisticsContainer.innerHTML = tableHTML;
+}
+
+// Helper function to get team logo using actual PNG files
+function getTeamLogo(teamName) {
+    const teamLogos = {
+        'Spain': '🇪🇸',
+        'Portugal': '🇵🇹',
+        'Belgium': '🇧🇪',
+        'Netherlands': '🇳🇱',
+        'France': '🇫🇷',
+        'Germany': '🇩🇪',
+        'Italy': '🇮🇹',
+        'England': '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
+        'Sweden': '🇸🇪',
+        'Norway': '🇳🇴',
+        'Denmark': '🇩🇰',
+        'Finland': '🇫🇮',
+        'Iceland': '🇮🇸',
+        'Switzerland': '🇨🇭',
+        'Austria': '🇦🇹',
+        'Poland': '🇵🇱',
+        'Czech Republic': '🇨🇿',
+        'Croatia': '🇭🇷',
+        'Serbia': '🇷🇸',
+        'Ukraine': '🇺🇦',
+        'Wales': '🏴󠁧󠁢󠁷󠁬󠁳󠁿',
+        'Scotland': '🏴󠁧󠁢󠁳󠁣󠁴󠁿',
+        'Northern Ireland': '🇬🇧',
+        'Republic of Ireland': '🇮🇪',
+        'Ireland': '🇮🇪',
+        'Turkey': '🇹🇷',
+        'Greece': '🇬🇷',
+        'Hungary': '🇭🇺',
+        'Romania': '🇷🇴',
+        'Bulgaria': '🇧🇬',
+        'Slovenia': '🇸🇮',
+        'Slovakia': '🇸🇰',
+        'Estonia': '🇪🇪',
+        'Latvia': '🇱🇻',
+        'Lithuania': '🇱🇹',
+        'Cyprus': '🇨🇾',
+        'Malta': '🇲🇹',
+        'Luxembourg': '🇱🇺',
+        'Albania': '🇦🇱',
+        'North Macedonia': '🇲🇰',
+        'Bosnia and Herzegovina': '🇧🇦',
+        'Montenegro': '🇲🇪',
+        'Moldova': '🇲🇩',
+        'Belarus': '🇧🇾',
+        'Georgia': '🇬🇪',
+        'Armenia': '🇦🇲',
+        'Azerbaijan': '🇦🇿',
+        'Kazakhstan': '🇰🇿',
+        'Russia': '🇷🇺',
+        'Israel': '🇮🇱',
+        'Faroe Islands': '🇫🇴',
+        'Gibraltar': '🇬🇮',
+        'Andorra': '🇦🇩',
+        'San Marino': '🇸🇲',
+        'Monaco': '🇲🇨',
+        'Liechtenstein': '🇱🇮',
+        'Kosovo': '🇽🇰'
+    };
+    
+    const flagEmoji = teamLogos[teamName];
+    if (flagEmoji) {
+        return `<span class="team-flag-emoji">${flagEmoji}</span>`;
+    }
+    return `<span class="team-logo-fallback">${teamName.substring(0, 3).toUpperCase()}</span>`;
+}
+
+// Display overview function
+function displayOverview() {
+    const overviewContainer = document.querySelector('#overview-tab .overview-container');
+    
+    if (!matches.length) {
+        overviewContainer.innerHTML = '<p>No data available for the selected competition and season.</p>';
+        return;
+    }
+    
+    // Get competition and season names
+    const competitionName = getCompetitionName(currentCompetition);
+    const seasonName = getSeasonName(currentSeason);
+    
+    // Group matches by phase and then by date within each phase
+    const matchesByPhase = {};
+    matches.forEach(match => {
+        const phase = match.match_round || 'Unknown';
+        if (!matchesByPhase[phase]) {
+            matchesByPhase[phase] = [];
+        }
+        matchesByPhase[phase].push(match);
+    });
+    
+    // Sort phases by phase_order, then matches within each phase by date
+    const sortedPhases = Object.keys(matchesByPhase).sort((a, b) => {
+        const phaseA = matchesByPhase[a][0]?.phase_order || 999;
+        const phaseB = matchesByPhase[b][0]?.phase_order || 999;
+        return phaseA - phaseB;
+    });
+    
+    // Sort matches within each phase by date
+    sortedPhases.forEach(phase => {
+        matchesByPhase[phase].sort((a, b) => new Date(a.match_date) - new Date(b.match_date));
+    });
+    
+    let overviewHTML = `
+        <div class="overview-content">
+            <div class="competition-header">
+                <div class="competition-logo">🏆</div>
+                <h2>${competitionName}</h2>
+                <p class="season-name">${seasonName}</p>
+                <p class="match-count">${matches.length} matches</p>
+            </div>
+            
+            <div class="matches-by-phase">
+    `;
+    
+    sortedPhases.forEach(phase => {
+        const phaseMatches = matchesByPhase[phase];
+        const matchCount = phaseMatches.length;
+        
+        overviewHTML += `
+            <div class="phase-group">
+                <h3 class="phase-header">${phase} <span class="match-count-badge">${matchCount} matches</span></h3>
+        `;
+        
+        phaseMatches.forEach(match => {
+            const homeTeamLogo = getTeamLogo(match.home_team);
+            const awayTeamLogo = getTeamLogo(match.away_team);
+            const matchPhase = getMatchPhase(match.match_round);
+            const formattedDate = new Date(match.match_date).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric'
+            });
+            
+            // Build match context info
+            let matchContext = formattedDate;
+            if (match.group) {
+                matchContext += ` • ${match.group}`;
+            }
+            if (match.match_day && match.match_day !== match.match_round) {
+                matchContext += ` • ${match.match_day}`;
+            }
+            
+            overviewHTML += `
+                <div class="overview-match-item">
+                    <div class="match-info-left">
+                        <div class="match-teams-overview">
+                            <div class="team-display">
+                                ${homeTeamLogo}
+                                <span class="team-name">${match.home_team}</span>
+                            </div>
+                            <span class="vs-separator">vs</span>
+                            <div class="team-display">
+                                ${awayTeamLogo}
+                                <span class="team-name">${match.away_team}</span>
+                            </div>
+                        </div>
+                        <div class="match-context">${matchContext}</div>
+                    </div>
+                    <div class="match-info-right">
+                        <div class="match-score-overview">${match.home_score} - ${match.away_score}</div>
+                        <div class="match-phase ${matchPhase.class}">${matchPhase.name}</div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        overviewHTML += '</div>';
+    });
+    
+    overviewHTML += `
+            </div>
+        </div>
+    `;
+    
+    overviewContainer.innerHTML = overviewHTML;
+}
+
+// Helper function to get competition name
+function getCompetitionName(competitionId) {
+    // This would normally come from the competitions data
+    // For now, return a default based on common competition IDs
+    const competitionNames = {
+        '43': 'UEFA Women\'s Euro 2025',
+        '11': 'La Liga',
+        '2': 'Premier League',
+        '9': 'Bundesliga',
+        '12': 'Serie A'
+    };
+    return competitionNames[competitionId] || 'Competition';
+}
+
+// Helper function to get season name
+function getSeasonName(seasonId) {
+    // This would normally come from the seasons data
+    // For now, return a default based on common season IDs
+    const seasonNames = {
+        '3': '2025',
+        '90': '2020/2021',
+        '27': '2015/2016'
+    };
+    return seasonNames[seasonId] || 'Season';
+}
+
+// Helper function to get match phase with styling class
+function getMatchPhase(matchRound) {
+    const phaseMap = {
+        'Group Stage': { name: 'Group Stage', class: 'phase-group' },
+        'Round of 16': { name: 'Round of 16', class: 'phase-knockout' },
+        'Quarter Final': { name: 'Quarter Final', class: 'phase-knockout' },
+        'Semi Final': { name: 'Semi Final', class: 'phase-knockout' },
+        'Final': { name: 'Final', class: 'phase-final' }
+    };
+    
+    return phaseMap[matchRound] || { name: matchRound, class: 'phase-other' };
+}
+
+// Player Heat Map Functions
+async function loadPlayers(competitionId, seasonId) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/players/${competitionId}/${seasonId}`, {
+            headers: getApiHeaders()
+        });
+        
+        if (!response.ok) {
+            console.warn('Failed to load players, using sample data');
+            addSamplePlayers();
+            return;
+        }
+        
+        players = await response.json();
+        populatePlayerSelect();
+        
+    } catch (error) {
+        console.error('Error loading players:', error);
+        addSamplePlayers();
+    }
+}
+
+function addSamplePlayers() {
+    players = [
+        {
+            player_id: 1,
+            player_name: 'Lionel Messi',
+            jersey_number: 10,
+            position: 'Right Wing',
+            team_name: 'Argentina'
+        },
+        {
+            player_id: 2,
+            player_name: 'Kylian Mbappé',
+            jersey_number: 7,
+            position: 'Centre-Forward',
+            team_name: 'France'
+        },
+        {
+            player_id: 3,
+            player_name: 'Pedri',
+            jersey_number: 8,
+            position: 'Central Midfield',
+            team_name: 'Spain'
+        },
+        {
+            player_id: 4,
+            player_name: 'Jamal Musiala',
+            jersey_number: 14,
+            position: 'Attacking Midfield',
+            team_name: 'Germany'
+        }
+    ];
+    populatePlayerSelect();
+}
+
+function populatePlayerSelect() {
+    playerSelect.innerHTML = '<option value="">Choose a player...</option>';
+    
+    // Sort players by team and name
+    const sortedPlayers = players.sort((a, b) => {
+        if (a.team_name !== b.team_name) {
+            return a.team_name.localeCompare(b.team_name);
+        }
+        return a.player_name.localeCompare(b.player_name);
+    });
+    
+    sortedPlayers.forEach(player => {
+        const option = document.createElement('option');
+        option.value = player.player_id;
+        option.textContent = `${player.player_name} (${player.team_name})`;
+        if (player.jersey_number) {
+            option.textContent += ` #${player.jersey_number}`;
+        }
+        playerSelect.appendChild(option);
+    });
+}
+
+function showPlayerSelection() {
+    playerSelection.style.display = 'block';
+    document.querySelector('.statistics-container').style.display = 'none';
+    
+    if (!playerSelect.value) {
+        hideHeatMap();
+    }
+}
+
+function hidePlayerSelection() {
+    playerSelection.style.display = 'none';
+    document.querySelector('.statistics-container').style.display = 'block';
+    hideHeatMap();
+}
+
+function hideHeatMap() {
+    heatmapContainer.style.display = 'none';
+}
+
+async function displayPlayerHeatMap(competitionId, seasonId, playerId) {
+    try {
+        // Show loading state
+        heatmapContainer.style.display = 'block';
+        heatmapContainer.innerHTML = '<div class="loading-spinner">Loading heat map data...</div>';
+        
+        const response = await fetch(`${API_BASE_URL}/players/${competitionId}/${seasonId}/${playerId}/heatmap`, {
+            headers: getApiHeaders()
+        });
+        
+        if (!response.ok) {
+            console.warn('Failed to load heat map data, using sample data');
+            displaySampleHeatMap(playerId);
+            return;
+        }
+        
+        const heatMapData = await response.json();
+        renderHeatMap(heatMapData);
+        
+    } catch (error) {
+        console.error('Error loading heat map:', error);
+        displaySampleHeatMap(playerId);
+    }
+}
+
+function displaySampleHeatMap(playerId) {
+    const player = players.find(p => p.player_id === playerId);
+    if (!player) return;
+    
+    // Generate sample heat map data
+    const sampleHeatMapData = {
+        player_id: player.player_id,
+        player_name: player.player_name,
+        team_name: player.team_name,
+        position: player.position,
+        jersey_number: player.jersey_number,
+        total_events: Math.floor(Math.random() * 200) + 100,
+        heat_zones: generateSampleHeatZones()
+    };
+    
+    renderHeatMap(sampleHeatMapData);
+}
+
+function generateSampleHeatZones() {
+    const zones = [];
+    const gridSize = 10;
+    
+    for (let i = 0; i < gridSize; i++) {
+        for (let j = 0; j < gridSize; j++) {
+            const intensity = Math.random() * 50;
+            zones.push({
+                x_min: (120 / gridSize) * i,
+                x_max: (120 / gridSize) * (i + 1),
+                y_min: (80 / gridSize) * j,
+                y_max: (80 / gridSize) * (j + 1),
+                x_center: (120 / gridSize) * (i + 0.5),
+                y_center: (80 / gridSize) * (j + 0.5),
+                intensity: intensity,
+                normalized_intensity: intensity / 50
+            });
+        }
+    }
+    
+    return zones;
+}
+
+function renderHeatMap(heatMapData) {
+    const playerInfo = `
+        <div class="player-info">
+            <div>
+                <h3>${heatMapData.player_name}</h3>
+                <p>${heatMapData.team_name} ${heatMapData.jersey_number ? `#${heatMapData.jersey_number}` : ''}</p>
+                <p><strong>Position:</strong> ${heatMapData.position || 'N/A'}</p>
+            </div>
+            <div class="player-stats">
+                <div class="stat-item">
+                    <span class="stat-value">${heatMapData.total_events}</span>
+                    <span class="stat-label">Total Events</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">${heatMapData.heat_zones.filter(z => z.intensity > 0).length}</span>
+                    <span class="stat-label">Active Zones</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">${Math.max(...heatMapData.heat_zones.map(z => Math.round(z.intensity)))}</span>
+                    <span class="stat-label">Max Intensity</span>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    const pitchHTML = `
+        <div class="heatmap-pitch">
+            <div class="pitch-background">
+                <div class="pitch-lines">
+                    <div class="pitch-line center-line"></div>
+                    <div class="center-circle"></div>
+                    <div class="penalty-area left"></div>
+                    <div class="penalty-area right"></div>
+                </div>
+                ${renderHeatZones(heatMapData.heat_zones)}
+            </div>
+        </div>
+        <div class="heat-legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background: rgba(0, 0, 255, 0.7);"></div>
+                <span>Low Activity</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: rgba(255, 255, 0, 0.7);"></div>
+                <span>Medium Activity</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: rgba(255, 0, 0, 0.7);"></div>
+                <span>High Activity</span>
+            </div>
+        </div>
+    `;
+    
+    heatmapContainer.innerHTML = playerInfo + pitchHTML;
+}
+
+function renderHeatZones(heatZones) {
+    return heatZones.map(zone => {
+        if (zone.intensity === 0) return '';
+        
+        // Convert StatsBomb coordinates to percentage
+        const left = (zone.x_min / 120) * 100;
+        const top = (zone.y_min / 80) * 100;
+        const width = ((zone.x_max - zone.x_min) / 120) * 100;
+        const height = ((zone.y_max - zone.y_min) / 80) * 100;
+        
+        // Color based on intensity (blue to red gradient)
+        const intensity = zone.normalized_intensity;
+        let color;
+        if (intensity < 0.33) {
+            // Blue to yellow
+            const ratio = intensity / 0.33;
+            color = `rgba(${Math.round(ratio * 255)}, ${Math.round(ratio * 255)}, ${Math.round(255 - ratio * 255)}, 0.7)`;
+        } else if (intensity < 0.66) {
+            // Yellow to orange
+            const ratio = (intensity - 0.33) / 0.33;
+            color = `rgba(255, ${Math.round(255 - ratio * 128)}, 0, 0.7)`;
+        } else {
+            // Orange to red
+            const ratio = (intensity - 0.66) / 0.34;
+            color = `rgba(255, ${Math.round(127 - ratio * 127)}, 0, 0.7)`;
+        }
+        
+        return `
+            <div class="heat-zone" 
+                 style="left: ${left}%; top: ${top}%; width: ${width}%; height: ${height}%; background: ${color};"
+                 title="Intensity: ${Math.round(zone.intensity)} events">
+            </div>
+        `;
+    }).join('');
 }
 
 // File cleanup completed - all orphaned code blocks removed
