@@ -5,12 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Estilo Futbol - Football Analytics</title>
     <link rel="stylesheet" href="css/styles.css">
-    <link rel="icon" type="image/png" href="../assets/Logo horizontal.png">
+    <link rel="icon" type="image/png" href="assets/Logo horizontal.png">
 </head>
 <body>
     <header>
         <div class="logo-container">
-            <img src="../assets/Logo horizontal.png" alt="Estilo Futbol Logo" class="logo">
+            <img src="assets/Logo horizontal.png" alt="Estilo Futbol Logo" class="logo">
             <h1>Estilo Futbol</h1>
         </div>
         <nav>
@@ -38,21 +38,7 @@
             </div>
         </section>
         
-        <section class="match-list-section">
-            <h2>Match List</h2>
-            <div class="match-form-controls">
-                <select id="match-competition-select">
-                    <option value="43" selected>La Liga</option>
-                </select>
-                <select id="match-season-select">
-                    <option value="3" selected>2020/2021</option>
-                </select>
-                <button id="load-matches-btn">Load Matches</button>
-            </div>
-            <div id="match-list">
-                <p class="loading-message">Select competition and season, then click Load Matches</p>
-            </div>
-        </section>
+
 
         <section id="overview-tab" class="tab-content active">
             <h2>Competition Overview</h2>
@@ -79,18 +65,38 @@
 
         <section id="statistics-tab" class="tab-content">
             <h2>Team Statistics</h2>
-            <div class="filters">
+            <div class="filter-group">
                 <label for="stat-category">Category:</label>
                 <select id="stat-category">
                     <option value="goals">Goals</option>
                     <option value="possession">Possession</option>
                     <option value="passes">Passes</option>
                     <option value="shots">Shots</option>
+                    <option value="players">Player Heat Maps</option>
                 </select>
             </div>
+            
+            <!-- Player selection (hidden by default) -->
+            <div id="player-selection" class="filter-group" style="display: none;">
+                <label for="player-select">Select Player:</label>
+                <select id="player-select">
+                    <option value="">Choose a player...</option>
+                </select>
+            </div>
+            
             <div class="statistics-container">
                 <p>Select a competition and season to view statistics.</p>
                 <!-- Will be populated by JavaScript -->
+            </div>
+            
+            <!-- Heat map container (hidden by default) -->
+            <div id="heatmap-container" style="display: none;">
+                <div class="player-info">
+                    <!-- Player information will be displayed here -->
+                </div>
+                <div class="heatmap-pitch">
+                    <!-- Heat map visualization will be displayed here -->
+                </div>
             </div>
         </section>
     </main>
