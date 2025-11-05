@@ -1,6 +1,7 @@
 # Estilo Futbol
 
-A modern web application for football analytics using StatsBomb open data.
+A web app that shows deatail information on statistics and deep analisys on football.
+The source of the data right now is StatsBomb open data for the testing.
 
 🌐 **Live Demo**: [https://estilo-futbol.vercel.app/](https://estilo-futbol.vercel.app/)
 
@@ -326,4 +327,5 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## Acknowledgments
 
 - [StatsBomb](https://statsbomb.com) for providing the open data
+
 - All contributors who have helped shape this project
